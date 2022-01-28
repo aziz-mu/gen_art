@@ -17,20 +17,23 @@ pygame.display.set_caption("waves")
 class Points():
 	def __init__(self):
 		self.pointA = [(50+5*x,250) for x in range(180)]
-		self.pointB = [(50+5*x, 250+150*np.sin(2*np.pi*x/180)) for x in range(180)]
+		self.pointB = self.pointA
+		self.timer = 0
 		self.on = False
 		self.points = self.pointA
 
+	def prepare_update(self):
+		self.pointB = [(50+5*x, 250+(min(self.timer, 150))*np.sin(2*np.pi*x/180+self.timer)) for x in range(180)]
+
 	def update_points(self):
-		if(self.on):
-			self.points = self.pointA
-			self.on = False
-		else:
-			self.points = self.pointB
-			self.on = True
+		self.points = self.pointB
 	
+	def reset(self):
+		self.points = self.pointA	
+		self.timer = 0
 
 linePoints = Points()
+keydown = False # Is a key down ? 
 # Main event loop
 while True:
 	for event in pygame.event.get():
@@ -38,10 +41,20 @@ while True:
 			pygame.quit()
 			sys.exit()
 		if event.type == KEYDOWN:
-			linePoints.update_points()
-	screen.fill((0,0,0))
+			keydown = True
+		if event.type == KEYUP:
+			keydown = False
+			linePoints.reset()
 
+	if keydown:
+		linePoints.timer += 0.1
+		linePoints.prepare_update()
+		pygame.time.wait(10)
+		linePoints.update_points()
+
+	screen.fill((0,0,0))
 	line = pygame.draw.lines(screen, (255,255,255), False,  linePoints.points, 1)
 
 	pygame.display.update()
+	pygame.time.wait(5)
 	
