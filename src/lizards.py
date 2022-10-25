@@ -8,9 +8,9 @@ HEX_COORDS = [(-0.5, -sin(pi/3)), (0.5, -sin(pi/3)), (0.5+cos(pi/3), 0.0),
 
 LIZARD_COORDS = [(15.68, 1.26), (15.85, -0.54), (11.42, -5.41), (4.64, -3.83),
         (3.47, -4.82), (2.58, -10.14), (7.13, -14.19), (6.3, -15.79), (2.59, -16.92),
-        (1.654, -15.41), (2.446, -14.025), (-1.125, -11.744), (-0.375, -6.024),
-        (-4.035, -1.329), (-3.017, -5.644), (-4.89, -10.198), (-6.935, -11.28),
-        (-10.795, -9.878), (-12.93 ,-10.47), (-15.78, -8.405), (-11.89, -5.706),
+        (1.654, -15.41), (2.446, -14.025), (-0.7, -11.744), (0.2, -6.2),
+        (-3.8, -1.4), (-2.5, -5.344), (-4.89, -10.9), (-6.435, -11.78),
+        (-9.88, -10.278), (-12.9 ,-11.02), (-14.88, -9.0), (-11.7, -5.9),
         (-7.653, -6.976), (-6.911, -4.149), (-9.129, -1.724), (-9.381, 1.664),
         (-11.1, 2.73), (-17.018, 1.981), (-19.72, -0.861), (-17.440, 4.894),
         (-12.088, 6.961), (-8.484, 6.813), (-4.435, 12.362), (-9.088, 17.714),
@@ -23,8 +23,11 @@ LIZARD_COORDS = [(x_coord/15.68, y_coord/15.68) for (x_coord, y_coord) in LIZARD
 
 class MorphedObject: 
 
-    def __init__(self):
-        self.coords = LIZARD_COORDS
+    def __init__(self, coord_type):
+        if (coord_type == "lizard"):
+            self.coords = LIZARD_COORDS
+        elif (coord_type == "hexagon"):
+            self.coords = HEX_COORDS
         self.translation_x = 0
         self.translation_y = 0
         self.rotation = 0
@@ -56,7 +59,6 @@ class Tesselation:
 
     def __init__(self, tesselation_type):
         self.units = []
-
         if tesselation_type == "hexagon":
             self.initialize_hex()
         elif tesselation_type == "lizard":
@@ -66,7 +68,7 @@ class Tesselation:
         translate_amount = (0,0)
         for i in range(10):
             for j in range(20):
-                unit = MorphedObject()
+                unit = MorphedObject("hexagon")
                 unit.rotate(pi/3*j)
                 unit.translate(3,3)
                 offset = 0
@@ -77,35 +79,39 @@ class Tesselation:
     
     def initialize_lizards(self):
         translate_amount = (0,0)
-        for i in range(10):
-            for j in range(20):
-                unit = MorphedObject()
-                unit.rotate(pi/3*j)
-                unit.translate(3,3)
-                offset = 0
-                if (j % 2 == 0):
-                    offset = 1+cos(pi/3)
-                unit.translate(2*i*(1+cos(pi/3))+offset,j*sin(pi/3))
-                self.units.append(unit)
+        right_disp = 1
+        down_disp = 2
 
-tesselation = Tesselation("hexagon")
-#tesselation = Tesselation("lizard")
+        # FIRST LIZARD
+        unit = MorphedObject("lizard")
+        #unit.rotate(2*pi/3*j)
+        unit.translate(3,3)
+        self.units.append(unit)
+
+        # SECOND LIZARD
+        unit = MorphedObject("lizard")
+        unit.rotate(2*pi/3)
+        unit.translate(3,3)
+        unit.translate(-1.46,0.09)
+        self.units.append(unit)
+
+#tesselation = Tesselation("hexagon")
+tesselation = Tesselation("lizard")
 
 # Main Cairo Printing
-with cairo.SVGSurface("output.svg", 1000, 1000) as surface:
+with cairo.SVGSurface("../art/lizards.svg", 1000, 1000) as surface:
     context = cairo.Context(surface)
     context.scale(100,100) 
     context.set_line_width(0.03)
 
     # Print tesselation
+    context.set_source_rgb(0.1, 0.1, 0.1)
     for unit in tesselation.units:
-        context.set_source_rgb(0.1, 0.1, 0.1)
         for i, coord in enumerate(unit.coords[:-1]):
             context.move_to(*coord)
             context.line_to(*unit.coords[i+1])
         context.stroke()
         context.move_to(*unit.coords[-1])
-        context.set_source_rgb(0.3, 0.2, 0.5)
         context.line_to(*unit.coords[0])
         context.stroke()
-        break;
+        #context.set_source_rgb(0.4,0.4,0.0)
