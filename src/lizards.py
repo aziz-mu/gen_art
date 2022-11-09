@@ -2,6 +2,7 @@
 
 from math import sin, cos, pi
 import cairo
+import random
 
 HEX_COORDS = [(-0.5, -sin(pi/3)), (0.5, -sin(pi/3)), (0.5+cos(pi/3), 0.0),
         (0.5,sin(pi/3)), (-0.5,sin(pi/3)),(-0.5-cos(pi/3),0.0)]
@@ -31,6 +32,8 @@ class MorphedObject:
         self.translation_x = 0
         self.translation_y = 0
         self.rotation = 0
+        self.fill_color = random.choices(range(256), k=3)
+        self.fill_color = (self.fill_color[0]/256,self.fill_color[1]/256,self.fill_color[2]/256)
 
     def translate(self, delta_x, delta_y):
         self.coords = [(x_coord+delta_x, y_coord+delta_y) for (x_coord, y_coord) in self.coords]
@@ -55,6 +58,16 @@ class MorphedObject:
 
             self.coords[i] = (x_coord, y_coord)
 
+    def draw(self, context):
+        context.move_to(*self.coords[0])
+        for i, coord in enumerate(self.coords[:-1]):
+            context.line_to(*self.coords[i+1])
+        context.line_to(*self.coords[0])
+        context.close_path()
+        context.set_source_rgb(*self.fill_color)
+        context.fill_preserve()
+        context.stroke()
+        context.fill()
 
 class Tesselation:
 
@@ -79,13 +92,12 @@ class Tesselation:
                 self.units.append(unit)
     
     def initialize_lizards(self):
-        translate_amount = (0,0)
         right_disp = 1
         down_disp = 2
 
         # BASE LIZARD GROUP
 
-        GROUP_NUMBERS = 40
+        GROUP_NUMBERS = 60
         for _ in range(GROUP_NUMBERS):
             # FIRST LIZARD
             unit = MorphedObject("lizard")
@@ -110,19 +122,30 @@ class Tesselation:
         DIFF_RIGHT = (2.245, -1.205)
         DIFF_UP = (2.18, 1.33)
 
-        def next_number(n):
-            # TODO: Make this funcction better. This should be a function
-            # that makes a spiral, a bijection from natural numbers to
-            # \mathbb{Z}^2
-            this_tuple = ((0,0),(1,0),(0,1), (-1,0), (0,-1), (1,1), (-1,-1), (1,-1), (-1,1), (2,0), (0,2), (-2,0), (0,-2), (2,1), (2,-1), (-2,1), (-2,-1), (1,2), (-1,2), (-1,-2), (1,-2), (2,2), (2,-2), (-2,2), (-2,-2),(3,0), (0,3), (-3,0), (0,-3), (3,1), (3,-1), (-3,-1), (-3,1), (1,3), (-1,-3), (-1,3), (1,-3), (2,3), (-2,-3), (2,-3), (-2,3), (3,2), (-3,-2), (-3,2), (3,-2), (3,3), (3,-3), (-3,3), (-3,-3))[n]
-            return (this_tuple[0]*DIFF_RIGHT[0]+this_tuple[1]*DIFF_UP[0], this_tuple[0]*DIFF_RIGHT[1]+this_tuple[1]*DIFF_UP[1])
+        def spiral(n):
+            directions = [(1,0), (0,-1), (-1,0), (0,1)]
+            counter = 1
+            idx = 0
+            k = n
+            result = (0,0)
+            while (k-counter >= 0):
+                direction = directions[idx % 4]
+                k = k-counter
+                result = (result[0] + direction[0]*counter, result[1]+direction[1]*counter)
+                if (idx % 2 == 1):
+                    counter += 1
+                idx += 1
+            if (k > 0):
+                direction = directions[idx % 4]
+                result = (result[0] + direction[0]*k, result[1]+direction[1]*k)
+            return result
 
         for n in range(int(GROUP_NUMBERS)):
+            sp = spiral(n)
+            translate_amount = (sp[0]*DIFF_RIGHT[0]+sp[1]*DIFF_UP[0], sp[0]*DIFF_RIGHT[1]+sp[1]*DIFF_UP[1])
             for unit in self.units[3*n:3*(n+1)]:
-                unit.translate(*next_number(n))
-        
+                unit.translate(*translate_amount)
 
-#tesselation = Tesselation("hexagon")
 tesselation = Tesselation("lizard")
 
 # Main Cairo Printing
@@ -131,17 +154,6 @@ with cairo.SVGSurface("../art/lizards.svg", 1000, 1000) as surface:
     context.scale(100,100) 
     context.set_line_width(0.03)
 
-    TEST = 0
     # Print tesselation
-    context.set_source_rgb(0.1, 0.1, 0.1)
     for unit in tesselation.units:
-        for i, coord in enumerate(unit.coords[:-1]):
-            context.move_to(*coord)
-            context.line_to(*unit.coords[i+1])
-        context.stroke()
-        context.move_to(*unit.coords[-1])
-        context.line_to(*unit.coords[0])
-        context.stroke()
-        #if (TEST > 3):
-            #context.set_source_rgb(0.4,0.4,0)
-        #TEST += 1
+        unit.draw(context)
