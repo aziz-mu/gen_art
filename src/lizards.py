@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 
 from math import sin, cos, pi
+from cairosvg import svg2png
 import cairo
 import random
+import os
+import shutil
 
 HEX_COORDS = [(-0.5, -sin(pi/3)), (0.5, -sin(pi/3)), (0.5+cos(pi/3), 0.0),
         (0.5,sin(pi/3)), (-0.5,sin(pi/3)),(-0.5-cos(pi/3),0.0)]
@@ -58,6 +61,15 @@ class MorphedObject:
 
             self.coords[i] = (x_coord, y_coord)
 
+    def rotate_out_of_place(self, angle):
+        for i, coord in enumerate(self.coords):
+            x_coord = coord[0]
+            y_coord = coord[1]
+            new_x = x_coord*cos(angle)-y_coord*sin(angle)
+            new_y = x_coord*sin(angle)+y_coord*cos(angle)
+             
+            self.coords[i] = (new_x, new_y)
+
     def draw(self, context):
         context.move_to(*self.coords[0])
         for i, coord in enumerate(self.coords[:-1]):
@@ -73,6 +85,9 @@ class Tesselation:
 
     def __init__(self, tesselation_type):
         self.units = []
+        self.translation_x = 0
+        self.translation_y = 0
+        self.rotation = 0
         if tesselation_type == "hexagon":
             self.initialize_hex()
         elif tesselation_type == "lizard":
@@ -101,20 +116,17 @@ class Tesselation:
         for _ in range(GROUP_NUMBERS):
             # FIRST LIZARD
             unit = MorphedObject("lizard")
-            unit.translate(5,5)
             self.units.append(unit)
 
             # SECOND LIZARD
             unit = MorphedObject("lizard")
             unit.rotate(4*pi/6)
-            unit.translate(5,5)
             unit.translate(0.79,-1.122)
             self.units.append(unit)
 
             # THIRD LIZARD
             unit = MorphedObject("lizard")
             unit.rotate(4*pi/3)
-            unit.translate(5,5)
             unit.translate(-0.81,-1.21)
             self.units.append(unit)
 
@@ -146,14 +158,44 @@ class Tesselation:
             for unit in self.units[3*n:3*(n+1)]:
                 unit.translate(*translate_amount)
 
+    def translate(self, translation_amount):
+        self.translation_x += translation_amount[0]
+        self.translation_y += translation_amount[1]
+        for unit in self.units:
+            unit.translate(*translation_amount)
+    
+    def rotate(self, angle):
+        self.rotation += angle
+        for unit in self.units:
+            unit.translate(-self.translation_x, -self.translation_y)
+            unit.rotate_out_of_place(angle)
+            unit.translate(self.translation_x, self.translation_y)
+
+
+
 tesselation = Tesselation("lizard")
+tesselation.translate((5,5))
 
-# Main Cairo Printing
-with cairo.SVGSurface("../art/lizards.svg", 1000, 1000) as surface:
-    context = cairo.Context(surface)
-    context.scale(100,100) 
-    context.set_line_width(0.03)
+os.mkdir("temp")
 
-    # Print tesselation
-    for unit in tesselation.units:
-        unit.draw(context)
+print("Creating frames...")
+FRAMES = 70
+for i in range(FRAMES):
+    tesselation.rotate(2*pi/FRAMES)
+    file_name = "temp/lizards" + str(i).zfill(3) + ".svg"
+    with cairo.SVGSurface(file_name, 1000, 1000) as surface:
+        context = cairo.Context(surface)
+        context.scale(100,100) 
+        context.set_line_width(0.03)
+
+        for unit in tesselation.units:
+            unit.draw(context)
+
+print("Converting each image to png")
+for i in range(FRAMES):
+    file_name = "temp/lizards"+str(i).zfill(3)
+    svg2png(url = file_name+".svg", write_to = file_name+".png")
+
+print("Creating gif")
+os.system('ffmpeg -f image2 -hide_banner -loglevel error -start_number 0 -framerate 24 -y -i temp/lizards%03d.png -loop -0 "lizards.gif"')
+shutil.rmtree("temp")
