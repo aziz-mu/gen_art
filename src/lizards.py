@@ -1,5 +1,17 @@
 #!/usr/bin/env python3
 
+"""
+This file generates a tesselation of lizards similar to the one
+found in M.C. Escher's Reptiles
+
+https://en.wikipedia.org/wiki/Reptiles_(M._C._Escher)
+
+By default, it creates a .gif of the tesselation spinning in a circle.
+Still images can be created by changing the code at the end of the file.
+Colors for the lizards are chosen randomly.
+
+"""
+
 from math import sin, cos, pi
 from cairosvg import svg2png
 import cairo

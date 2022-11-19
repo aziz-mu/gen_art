@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+"""
+A very simple animation. Run this file and press any key. 
+"""
+
+
 import sys
 import numpy as np
 
