@@ -10,6 +10,12 @@ By default, it creates a .gif of the tesselation spinning in a circle.
 Still images can be created by changing the code at the end of the file.
 Colors for the lizards are chosen randomly.
 
+---
+
+This file also contains code to make a hexagonal tesselation in case of a severe fear of lizards. 
+
+---
+
 """
 
 from math import sin, cos, pi
