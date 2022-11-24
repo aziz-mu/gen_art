@@ -80,11 +80,11 @@ def get_closest_dot_color(gearlist, x_coord, y_coord):
 
 def draw_pixel(context, i, j):
     context.set_source_rgb(*get_closest_dot_color([gear1, gear2], i/NUMBER_OF_PIXELS*10, j/NUMBER_OF_PIXELS*10))
-    context.move_to(i/NUMBER_OF_PIXELS*10, j/NUMBER_OF_PIXELS*10)
-    context.line_to((i+1)/NUMBER_OF_PIXELS*10, j/NUMBER_OF_PIXELS*10)
-    context.line_to((i+1)/NUMBER_OF_PIXELS*10, (j+1)/NUMBER_OF_PIXELS*10)
-    context.line_to(i/NUMBER_OF_PIXELS*10, (j+1)/NUMBER_OF_PIXELS*10)
-    context.line_to(i/NUMBER_OF_PIXELS*10, j/NUMBER_OF_PIXELS*10)
+    context.move_to(i/NUMBER_OF_PIXELS*10-0.01, j/NUMBER_OF_PIXELS*10-0.01)
+    context.line_to((i+1)/NUMBER_OF_PIXELS*10+0.01, j/NUMBER_OF_PIXELS*10-0.01)
+    context.line_to((i+1)/NUMBER_OF_PIXELS*10+0.01, (j+1)/NUMBER_OF_PIXELS*10+0.01)
+    context.line_to(i/NUMBER_OF_PIXELS*10-0.01, (j+1)/NUMBER_OF_PIXELS*10+0.01)
+    context.line_to(i/NUMBER_OF_PIXELS*10-0.01, j/NUMBER_OF_PIXELS*10-0.01)
     context.fill()
     context.stroke()
 
@@ -92,7 +92,6 @@ def draw_pixel(context, i, j):
 
 gear1 = Gear(4,30,10,8,5)
 gear2 = Gear(3,20,15,2,6)
-print("color of center: ", get_closest_dot_color([gear1, gear2], 5,5))
 
 with cairo.SVGSurface("gear.svg", 1000, 1000) as surface:
     context = cairo.Context(surface)
