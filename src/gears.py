@@ -8,6 +8,8 @@ from math import pi, sin, cos
 import random
 import cairo
 
+NUMBER_OF_PIXELS = 127
+
 class Dot():
     def __init__(self, x_coord, y_coord):
         self.x = x_coord
@@ -59,14 +61,45 @@ class Gear():
     def draw(self, context):
         [spoke.draw(context) for spoke in self.spokes]
 
+def get_closest_dot_color(gearlist, x_coord, y_coord):
+
+    def squared_distance(x_1, y_1, x_2, y_2):
+        return ((x_1-x_2)**2+(y_1-y_2)**2)
+
+    min_distance = -1
+    dot_color = (0,0,0)
+
+    for gear in gearlist:
+        for spoke in gear.spokes:
+            for dot in spoke.dots:
+                dist = squared_distance(x_coord, y_coord, dot.x, dot.y)
+                if (min_distance == -1 or dist < min_distance):
+                        min_distance = dist
+                        dot_color = dot.fill_color
+    return dot_color
+
+def draw_pixel(context, i, j):
+    context.set_source_rgb(*get_closest_dot_color([gear1, gear2], i/NUMBER_OF_PIXELS*10, j/NUMBER_OF_PIXELS*10))
+    context.move_to(i/NUMBER_OF_PIXELS*10, j/NUMBER_OF_PIXELS*10)
+    context.line_to((i+1)/NUMBER_OF_PIXELS*10, j/NUMBER_OF_PIXELS*10)
+    context.line_to((i+1)/NUMBER_OF_PIXELS*10, (j+1)/NUMBER_OF_PIXELS*10)
+    context.line_to(i/NUMBER_OF_PIXELS*10, (j+1)/NUMBER_OF_PIXELS*10)
+    context.line_to(i/NUMBER_OF_PIXELS*10, j/NUMBER_OF_PIXELS*10)
+    context.fill()
+    context.stroke()
+
+
+
 gear1 = Gear(4,30,10,8,5)
 gear2 = Gear(3,20,15,2,6)
+print("color of center: ", get_closest_dot_color([gear1, gear2], 5,5))
 
 with cairo.SVGSurface("gear.svg", 1000, 1000) as surface:
     context = cairo.Context(surface)
     context.scale(100,100) 
     context.set_line_width(0.03)
     context.set_source_rgb(0,0,0)
-
-    gear1.draw(context)
-    gear2.draw(context)
+    
+    for i in range(NUMBER_OF_PIXELS):
+        for j in range(NUMBER_OF_PIXELS):
+            draw_pixel(context, i, j)

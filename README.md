@@ -9,4 +9,5 @@ This repository showcases some simple, art-like things generated using python. I
 Gallery: 
 <p>
 <img src="art/lizard_tesselation.png", width=400>
+<img src="art/gear.svg", width=400>
           </p>
