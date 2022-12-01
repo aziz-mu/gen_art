@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 
 """
-Description
+This file generates a gif. Try it out!
+
+To create this, two "gears" are created - wheels of dots that 
+slowly rotate. Then, each dot is assigned a colour. For each
+pixel in the final scene, its closest dot is found and the pixel
+is assigned the color of that dot. 
 
 """
 from math import pi, sin, cos
